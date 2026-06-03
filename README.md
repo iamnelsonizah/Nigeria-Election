@@ -1,91 +1,105 @@
-# 🇳🇬 Nigeria Election Analytics Hub
+# Nigeria Election Analytics Dashboard
 
-A real-time Streamlit dashboard for comprehensive analysis of Nigeria's election data spanning 2015–2023.
+A full-stack election analytics workspace built with a Next.js dashboard frontend and a FastAPI analytics backend. It covers Nigerian presidential, gubernatorial, National Assembly, turnout, regional, and anomaly indicators across the 2011-2023 election cycles.
 
----
+## Stack
 
-## 📊 Features
+- **Frontend:** Next.js App Router, React, TypeScript, custom responsive chart components
+- **Backend:** FastAPI, Pandas, NumPy, typed analytics service layer
+- **Data:** In-repository election datasets and curated helper module in `data/`
 
-| Module | What It Shows |
-|---|---|
-| **Election Results** | Presidential winners, gubernatorial state-by-state table, party win counts |
-| **Vote Share & Trends** | National vote share over time, zone-level stacked bars, scatter analysis |
-| **Regional Patterns** | Animated zone bars, APC heatmap, treemap of state dominance |
-| **Voter Turnout** | Turnout trends, participation funnel, youth/female demographics |
-| **National Assembly** | Senate & House seat distribution, zone breakdown, area charts |
-| **Anomaly Indicators** | Turnout swings, rejection outliers, landslide wins, flagged anomalies |
+## Features
 
----
+| Area | Coverage |
+| --- | --- |
+| Overview | National KPIs, 2023 vote share, turnout trend, winners timeline |
+| Presidential | National result, state-level vote stacks, party wins, state table |
+| Vote trends | Party vote share and absolute vote trajectories |
+| Regional | Geopolitical zone summaries, dominant party signals, state drilldowns |
+| Turnout | Registration, votes cast, non-voting gap, state and zone turnout |
+| National Assembly | Senate and House composition with trend lines |
+| Governorship | 2023 state executive control and winning vote totals |
+| Anomalies | Benford analysis, turnout outliers, margin spikes, known incident context |
 
-## 🚀 Quick Start
+## Project Structure
 
-### 1. Install dependencies
-```bash
-pip install -r requirements.txt
-```
-
-### 2. Run the dashboard
-```bash
-streamlit run app.py
-```
-
-### 3. Open in browser
-The dashboard opens at: `http://localhost:8501`
-
----
-
-## 📁 Project Structure
-
-```
+```text
 nigeria_election_dashboard/
-├── app.py                        # Main Streamlit application
-├── requirements.txt              # Python dependencies
-├── README.md                     # This file
-└── data/
-    ├── presidential_results.csv  # Pres. votes by state/party (2015-2023)
-    ├── gubernatorial_results.csv # Gov. winners by state (2015-2023)
-    ├── voter_turnout.csv         # Turnout & demographics (2015-2023)
-    └── national_assembly.csv    # Senate/House seats by zone/party
+├── backend/
+│   └── app/
+│       ├── main.py
+│       ├── routes.py
+│       └── services/election_analytics.py
+├── frontend/
+│   └── src/
+│       ├── app/
+│       ├── components/
+│       └── lib/
+├── data/
+│   ├── nigeria_election_data.py
+│   └── *.csv
+├── requirements.txt
+└── package.json
 ```
 
----
+## Setup
 
-## 📦 Data Sources
+Create and install the Python backend dependencies:
 
-- **INEC** — Independent National Electoral Commission official results
-- **Stears Elections** — stears.co election database
-- **YIAGA Africa** — Parallel vote tabulation & civic observer data
-- **SBM Intelligence** — Electoral analytics reports
-- **Academic literature** — Electoral Studies, African Affairs journals
+```powershell
+python -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+```
 
----
+Install the frontend dependencies:
 
-## 🎛️ Dashboard Controls
+```powershell
+npm.cmd --prefix frontend install
+```
 
-Use the **sidebar** to filter:
-- **Election Years**: 2015, 2019, 2023 (multi-select)
-- **Geopolitical Zones**: All 6 zones (multi-select)
-- **Parties**: APC, PDP, LP (multi-select)
+## Run Locally
 
-Filters apply across all tabs dynamically.
+Start FastAPI from the project root:
 
----
+```powershell
+npm.cmd run api
+```
 
-## 🔍 Key Insights Covered
+Build and start the verified Next.js frontend in another terminal:
 
-1. **APC's North West fortress** — contributes ~35% of APC's total presidential votes
-2. **LP's 2023 South East sweep** — historic shift from PDP dominance
-3. **Lagos near-flip** — Obi vs Tinubu separated by <10,000 votes
-4. **FCT urban shift** — educated urban voters moving to LP
-5. **Declining turnout** — National avg dropped from 57% (2015) to 38% (2023)
-6. **Anomaly flags** — Rivers 2015, Borno 2019, Bayelsa patterns
+```powershell
+npm.cmd run build
+npm.cmd run start
+```
 
----
+Open the dashboard at [http://127.0.0.1:3000](http://127.0.0.1:3000). The API docs are available at [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs).
 
-## ⚠️ Disclaimer
+For hot-reload frontend development, use:
 
-This dashboard is for **research and civic transparency purposes only**. Anomaly indicators are statistical flags and do not constitute legal evidence of electoral fraud.
+```powershell
+npm.cmd run dev
+```
 
----
+## Configuration
 
-*Built with Streamlit · Plotly · Pandas*
+The Next.js proxy reads `FASTAPI_URL` from `frontend/.env.local`. If omitted, it defaults to:
+
+```text
+http://127.0.0.1:8000
+```
+
+FastAPI CORS origins can be overridden with `CORS_ORIGINS`.
+
+## Validation
+
+Useful checks:
+
+```powershell
+npm.cmd --prefix frontend run lint
+npm.cmd --prefix frontend run build
+.\.venv\Scripts\python.exe -m uvicorn backend.app.main:app --host 127.0.0.1 --port 8000
+```
+
+## Disclaimer
+
+The anomaly module surfaces statistical flags for civic research and review. These signals are not legal evidence of electoral fraud.

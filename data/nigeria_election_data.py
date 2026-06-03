@@ -419,3 +419,282 @@ def get_zone_summary(year=2023):
         zones.append({"Zone": zone, "Total_Votes": total, "APC": apc, "PDP": pdp,
                       "LP": lp, "NNPP": nnpp, "Dominant_Party": dominant})
     return pd.DataFrame(zones)
+
+
+# ─────────────────────────────────────────────
+# SOCIO-ECONOMIC & DEMOGRAPHIC DATA BY STATE
+# Sources: NBS, World Bank Nigeria, UNDP HDI
+# ─────────────────────────────────────────────
+STATE_DEMOGRAPHICS = {
+    "Abia":        {"literacy_rate": 75.1, "poverty_rate": 31.2, "gdp_billion_naira": 1_420, "population_million": 3.73, "unemployment_rate": 21.0},
+    "Adamawa":     {"literacy_rate": 42.8, "poverty_rate": 75.4, "gdp_billion_naira": 980,  "population_million": 4.25, "unemployment_rate": 32.5},
+    "Akwa Ibom":   {"literacy_rate": 74.2, "poverty_rate": 27.1, "gdp_billion_naira": 3_870, "population_million": 5.48, "unemployment_rate": 18.4},
+    "Anambra":     {"literacy_rate": 75.5, "poverty_rate": 14.8, "gdp_billion_naira": 2_680, "population_million": 5.53, "unemployment_rate": 15.9},
+    "Bauchi":      {"literacy_rate": 25.3, "poverty_rate": 61.5, "gdp_billion_naira": 820,  "population_million": 6.54, "unemployment_rate": 41.4},
+    "Bayelsa":     {"literacy_rate": 71.6, "poverty_rate": 22.6, "gdp_billion_naira": 2_140, "population_million": 2.28, "unemployment_rate": 23.5},
+    "Benue":       {"literacy_rate": 59.8, "poverty_rate": 33.1, "gdp_billion_naira": 1_150, "population_million": 5.74, "unemployment_rate": 14.3},
+    "Borno":       {"literacy_rate": 14.5, "poverty_rate": 70.1, "gdp_billion_naira": 640,  "population_million": 5.86, "unemployment_rate": 44.1},
+    "Cross River": {"literacy_rate": 67.3, "poverty_rate": 38.7, "gdp_billion_naira": 1_240, "population_million": 3.87, "unemployment_rate": 20.7},
+    "Delta":       {"literacy_rate": 70.9, "poverty_rate": 33.9, "gdp_billion_naira": 5_610, "population_million": 5.66, "unemployment_rate": 25.0},
+    "Ebonyi":      {"literacy_rate": 64.1, "poverty_rate": 56.0, "gdp_billion_naira": 580,  "population_million": 2.88, "unemployment_rate": 23.3},
+    "Edo":         {"literacy_rate": 72.6, "poverty_rate": 43.0, "gdp_billion_naira": 2_070, "population_million": 4.24, "unemployment_rate": 22.0},
+    "Ekiti":       {"literacy_rate": 74.4, "poverty_rate": 28.4, "gdp_billion_naira": 680,  "population_million": 3.27, "unemployment_rate": 12.3},
+    "Enugu":       {"literacy_rate": 73.9, "poverty_rate": 58.1, "gdp_billion_naira": 1_530, "population_million": 4.41, "unemployment_rate": 20.5},
+    "FCT":         {"literacy_rate": 82.3, "poverty_rate": 38.7, "gdp_billion_naira": 8_920, "population_million": 3.56, "unemployment_rate": 14.8},
+    "Gombe":       {"literacy_rate": 30.1, "poverty_rate": 62.3, "gdp_billion_naira": 520,  "population_million": 3.26, "unemployment_rate": 35.0},
+    "Imo":         {"literacy_rate": 73.5, "poverty_rate": 28.9, "gdp_billion_naira": 1_390, "population_million": 5.41, "unemployment_rate": 27.6},
+    "Jigawa":      {"literacy_rate": 18.4, "poverty_rate": 87.0, "gdp_billion_naira": 620,  "population_million": 5.83, "unemployment_rate": 35.9},
+    "Kaduna":      {"literacy_rate": 42.5, "poverty_rate": 56.5, "gdp_billion_naira": 2_870, "population_million": 8.25, "unemployment_rate": 30.3},
+    "Kano":        {"literacy_rate": 38.6, "poverty_rate": 55.1, "gdp_billion_naira": 3_450, "population_million": 13.08, "unemployment_rate": 30.2},
+    "Katsina":     {"literacy_rate": 22.7, "poverty_rate": 56.4, "gdp_billion_naira": 1_020, "population_million": 7.83, "unemployment_rate": 36.7},
+    "Kebbi":       {"literacy_rate": 16.5, "poverty_rate": 50.2, "gdp_billion_naira": 610,  "population_million": 4.44, "unemployment_rate": 27.0},
+    "Kogi":        {"literacy_rate": 63.0, "poverty_rate": 32.8, "gdp_billion_naira": 850,  "population_million": 4.47, "unemployment_rate": 19.0},
+    "Kwara":       {"literacy_rate": 60.5, "poverty_rate": 30.5, "gdp_billion_naira": 1_060, "population_million": 3.19, "unemployment_rate": 11.0},
+    "Lagos":       {"literacy_rate": 92.0, "poverty_rate": 4.5,  "gdp_billion_naira": 33_680,"population_million": 15.39, "unemployment_rate": 14.6},
+    "Nasarawa":    {"literacy_rate": 48.7, "poverty_rate": 44.0, "gdp_billion_naira": 550,  "population_million": 2.52, "unemployment_rate": 20.0},
+    "Niger":       {"literacy_rate": 25.4, "poverty_rate": 65.6, "gdp_billion_naira": 1_100, "population_million": 5.56, "unemployment_rate": 29.0},
+    "Ogun":        {"literacy_rate": 74.0, "poverty_rate": 9.8,  "gdp_billion_naira": 3_410, "population_million": 5.22, "unemployment_rate": 9.5},
+    "Ondo":        {"literacy_rate": 71.4, "poverty_rate": 12.5, "gdp_billion_naira": 1_620, "population_million": 4.67, "unemployment_rate": 10.7},
+    "Osun":        {"literacy_rate": 72.3, "poverty_rate": 8.5,  "gdp_billion_naira": 1_320, "population_million": 4.71, "unemployment_rate": 6.5},
+    "Oyo":         {"literacy_rate": 70.8, "poverty_rate": 14.9, "gdp_billion_naira": 3_650, "population_million": 7.84, "unemployment_rate": 8.7},
+    "Plateau":     {"literacy_rate": 57.5, "poverty_rate": 55.1, "gdp_billion_naira": 910,  "population_million": 4.20, "unemployment_rate": 24.6},
+    "Rivers":      {"literacy_rate": 77.0, "poverty_rate": 21.5, "gdp_billion_naira": 7_830, "population_million": 7.30, "unemployment_rate": 19.5},
+    "Sokoto":      {"literacy_rate": 15.0, "poverty_rate": 81.2, "gdp_billion_naira": 680,  "population_million": 4.99, "unemployment_rate": 26.8},
+    "Taraba":      {"literacy_rate": 35.6, "poverty_rate": 67.7, "gdp_billion_naira": 520,  "population_million": 2.89, "unemployment_rate": 20.3},
+    "Yobe":        {"literacy_rate": 12.1, "poverty_rate": 72.3, "gdp_billion_naira": 450,  "population_million": 3.29, "unemployment_rate": 38.2},
+    "Zamfara":     {"literacy_rate": 17.5, "poverty_rate": 73.9, "gdp_billion_naira": 540,  "population_million": 4.52, "unemployment_rate": 36.5},
+}
+
+
+# ─────────────────────────────────────────────
+# ELECTORAL TRIBUNAL / LITIGATION TRACKER
+# Sources: Premium Times, Channels TV, INEC
+# ─────────────────────────────────────────────
+TRIBUNAL_CASES = [
+    # 2023 Cases
+    {
+        "year": 2023, "seat": "Presidential", "state": "National",
+        "petitioner": "Atiku Abubakar / PDP", "respondent": "Bola Tinubu / APC",
+        "status": "Resolved", "outcome": "Petition dismissed — Tinubu's election upheld by Supreme Court",
+        "arguments": "Allegations of non-compliance with Electoral Act, certificate forgery, and BVAS failures.",
+        "date": "2023-10-26", "severity": "Critical"
+    },
+    {
+        "year": 2023, "seat": "Presidential", "state": "National",
+        "petitioner": "Peter Obi / LP", "respondent": "Bola Tinubu / APC",
+        "status": "Resolved", "outcome": "Petition dismissed — Tinubu's election upheld by Supreme Court",
+        "arguments": "Alleged over-voting, voter suppression, and INEC server manipulation.",
+        "date": "2023-10-26", "severity": "Critical"
+    },
+    {
+        "year": 2023, "seat": "Governorship", "state": "Kano",
+        "petitioner": "APC", "respondent": "Abba Kabir Yusuf / NNPP",
+        "status": "Resolved", "outcome": "Tribunal upheld NNPP victory after APC challenged irregularities",
+        "arguments": "Allegations of ballot stuffing and manipulation of INEC result sheets.",
+        "date": "2023-12-20", "severity": "High"
+    },
+    {
+        "year": 2023, "seat": "Governorship", "state": "Abia",
+        "petitioner": "PDP", "respondent": "Alex Otti / LP",
+        "status": "Resolved", "outcome": "LP victory upheld on appeal — first LP governor",
+        "arguments": "PDP alleged voter irregularities and BVAS malfunction.",
+        "date": "2024-01-25", "severity": "High"
+    },
+    {
+        "year": 2023, "seat": "Governorship", "state": "Adamawa",
+        "petitioner": "APC", "respondent": "Ahmadu Fintiri / PDP",
+        "status": "Resolved", "outcome": "PDP victory upheld after supplementary election was initially nullified",
+        "arguments": "Disputed supplementary election results and INEC compliance issues.",
+        "date": "2024-01-26", "severity": "High"
+    },
+    {
+        "year": 2023, "seat": "Governorship", "state": "Plateau",
+        "petitioner": "APC", "respondent": "Caleb Mutfwang / PDP",
+        "status": "Resolved", "outcome": "APC won at tribunal, overturned by Appeal Court restoring PDP",
+        "arguments": "Contested vote tallies and non-compliance in several LGAs.",
+        "date": "2024-03-13", "severity": "Critical"
+    },
+    {
+        "year": 2023, "seat": "Governorship", "state": "Zamfara",
+        "petitioner": "APC", "respondent": "Dauda Lawal / PDP",
+        "status": "Resolved", "outcome": "PDP governor declared rightful winner by Appeal Court",
+        "arguments": "Allegations of over-voting and BVAS non-compliance.",
+        "date": "2024-02-09", "severity": "Medium"
+    },
+    {
+        "year": 2023, "seat": "Governorship", "state": "Enugu",
+        "petitioner": "LP", "respondent": "Peter Mbah / PDP",
+        "status": "Resolved", "outcome": "PDP victory upheld by tribunal and appeal court",
+        "arguments": "LP alleged massive disenfranchisement and result manipulation.",
+        "date": "2024-01-30", "severity": "Medium"
+    },
+    {
+        "year": 2023, "seat": "Senate", "state": "Rivers",
+        "petitioner": "PDP", "respondent": "APC",
+        "status": "Resolved", "outcome": "Multiple senatorial results contested — mixed rulings",
+        "arguments": "Violence-related disenfranchisement and result sheet tampering.",
+        "date": "2024-02-15", "severity": "Medium"
+    },
+    # 2019 Cases
+    {
+        "year": 2019, "seat": "Presidential", "state": "National",
+        "petitioner": "Atiku Abubakar / PDP", "respondent": "Muhammadu Buhari / APC",
+        "status": "Resolved", "outcome": "Buhari's election upheld by Supreme Court",
+        "arguments": "Allegations of server manipulation, certificate qualifications, and over-voting.",
+        "date": "2019-10-30", "severity": "Critical"
+    },
+    {
+        "year": 2019, "seat": "Governorship", "state": "Osun",
+        "petitioner": "PDP", "respondent": "Gboyega Oyetola / APC",
+        "status": "Resolved", "outcome": "Supplementary election result upheld for APC",
+        "arguments": "Vote suppression and inconclusive declaration challenged by PDP.",
+        "date": "2019-03-22", "severity": "High"
+    },
+    {
+        "year": 2019, "seat": "Governorship", "state": "Imo",
+        "petitioner": "APC (Hope Uzodimma)", "respondent": "Emeka Ihedioha / PDP",
+        "status": "Resolved", "outcome": "Supreme Court controversially reversed result — APC declared winner",
+        "arguments": "Disputed votes from 388 polling units excluded by INEC were reinstated by SC.",
+        "date": "2020-01-14", "severity": "Critical"
+    },
+    {
+        "year": 2019, "seat": "Governorship", "state": "Rivers",
+        "petitioner": "APC", "respondent": "Nyesom Wike / PDP",
+        "status": "Resolved", "outcome": "PDP victory upheld — APC candidacy was invalid",
+        "arguments": "APC was disqualified from fielding candidates due to invalid primaries.",
+        "date": "2019-12-30", "severity": "High"
+    },
+    # 2015 Cases
+    {
+        "year": 2015, "seat": "Presidential", "state": "National",
+        "petitioner": "Goodluck Jonathan / PDP", "respondent": "Muhammadu Buhari / APC",
+        "status": "No Petition", "outcome": "Jonathan conceded — no presidential petition filed",
+        "arguments": "Historic concession call marked the first peaceful transfer of power.",
+        "date": "2015-03-31", "severity": "Positive"
+    },
+    {
+        "year": 2015, "seat": "Governorship", "state": "Rivers",
+        "petitioner": "APC", "respondent": "Nyesom Wike / PDP",
+        "status": "Resolved", "outcome": "PDP victory upheld by tribunal",
+        "arguments": "APC alleged violence and vote manipulation in multiple LGAs.",
+        "date": "2016-02-20", "severity": "Medium"
+    },
+    {
+        "year": 2015, "seat": "Governorship", "state": "Taraba",
+        "petitioner": "APC", "respondent": "Darius Ishaku / PDP",
+        "status": "Resolved", "outcome": "PDP victory upheld by Appeal Court",
+        "arguments": "Disputes about INEC's declaration of results in contested LGAs.",
+        "date": "2016-01-18", "severity": "Medium"
+    },
+]
+
+
+# ─────────────────────────────────────────────
+# HELPER: DEMOGRAPHICS MERGED WITH TURNOUT
+# ─────────────────────────────────────────────
+
+def get_demographics_df():
+    """Merge demographic data with 2023 voter turnout and party results."""
+    rows = []
+    state_results = get_state_results(2023)
+    for state, demo in STATE_DEMOGRAPHICS.items():
+        voter = STATE_VOTER_DATA_2023.get(state, {})
+        reg = voter.get("registered", 0)
+        acc = voter.get("accredited", 0)
+        turnout_pct = round(acc / reg * 100, 1) if reg > 0 else 0
+
+        # Get party vote shares for this state
+        sr = state_results[state_results["State"] == state]
+        apc_pct = float(sr["APC_pct"].iloc[0]) if not sr.empty and "APC_pct" in sr.columns else 0
+        pdp_pct = float(sr["PDP_pct"].iloc[0]) if not sr.empty and "PDP_pct" in sr.columns else 0
+        lp_pct = float(sr["LP_pct"].iloc[0]) if not sr.empty and "LP_pct" in sr.columns else 0
+
+        rows.append({
+            "State": state,
+            "Zone": STATES_ZONES.get(state, "Unknown"),
+            "Literacy_Rate": demo["literacy_rate"],
+            "Poverty_Rate": demo["poverty_rate"],
+            "GDP_Billion": demo["gdp_billion_naira"],
+            "Population_M": demo["population_million"],
+            "Unemployment": demo["unemployment_rate"],
+            "Turnout_Pct": turnout_pct,
+            "Registered": reg,
+            "Accredited": acc,
+            "APC_Pct": apc_pct,
+            "PDP_Pct": pdp_pct,
+            "LP_Pct": lp_pct,
+        })
+    return pd.DataFrame(rows)
+
+
+def get_tribunal_cases(year=None):
+    """Return tribunal cases, optionally filtered by year."""
+    if year:
+        return [c for c in TRIBUNAL_CASES if c["year"] == year]
+    return TRIBUNAL_CASES
+
+
+def simulate_election(zone_turnout_adjustments, party_swing=None):
+    """
+    Run a what-if simulation on the 2023 presidential election.
+    
+    zone_turnout_adjustments: dict mapping zone name -> new turnout percentage
+    party_swing: dict mapping party -> percentage swing (+ gains, - losses)
+    
+    Returns simulated vote totals and winner.
+    """
+    df = get_state_results(2023).copy()
+    parties = ["APC", "PDP", "LP", "NNPP"]
+    
+    # Apply turnout adjustments per zone
+    for zone, new_turnout_pct in (zone_turnout_adjustments or {}).items():
+        mask = df["Zone"] == zone
+        for idx in df[mask].index:
+            state = df.loc[idx, "State"]
+            voter = STATE_VOTER_DATA_2023.get(state, {})
+            reg = voter.get("registered", 0)
+            old_acc = voter.get("accredited", 0)
+            
+            if reg > 0:
+                new_acc = int(reg * new_turnout_pct / 100)
+                scale = new_acc / old_acc if old_acc > 0 else 1
+                for p in parties:
+                    if p in df.columns:
+                        df.loc[idx, p] = int(df.loc[idx, p] * scale)
+                df.loc[idx, "Total_Votes"] = int(df.loc[idx, [p for p in parties if p in df.columns]].sum())
+
+    # Apply party swing percentages
+    if party_swing:
+        for p, swing_pct in party_swing.items():
+            if p in df.columns:
+                df[p] = (df[p] * (1 + swing_pct / 100)).astype(int)
+        for idx in df.index:
+            df.loc[idx, "Total_Votes"] = int(df.loc[idx, [p for p in parties if p in df.columns]].sum())
+
+    # Aggregate results
+    results = {}
+    for p in parties:
+        if p in df.columns:
+            results[p] = int(df[p].sum())
+    
+    total_votes = sum(results.values())
+    winner_party = max(results, key=results.get) if results else "N/A"
+    
+    # Zone breakdown
+    zone_results = []
+    for zone, grp in df.groupby("Zone"):
+        z = {"Zone": zone, "Total_Votes": int(grp["Total_Votes"].sum())}
+        for p in parties:
+            if p in grp.columns:
+                z[p] = int(grp[p].sum())
+        zone_results.append(z)
+    
+    return {
+        "total_votes": total_votes,
+        "results": results,
+        "winner_party": winner_party,
+        "pct": {p: round(v / total_votes * 100, 2) if total_votes > 0 else 0 for p, v in results.items()},
+        "zone_results": zone_results,
+        "state_results": df.to_dict(orient="records"),
+    }
+
